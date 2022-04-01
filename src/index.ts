@@ -4,7 +4,8 @@ import pino from "pino";
 import cors from "fastify-cors";
 import start from "./start";
 import { GithubCodeType } from "./schemas/GithubCode";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
+import to from "await-to-js";
 
 const server = fastify({
   // logger: pino({ level: "info" }),
@@ -16,47 +17,58 @@ server.get("/ping", async () => {
   return "pong\n";
 });
 
+interface SwapCodeForAccessToken {
+  access_token: string;
+  expires_in: number;
+  refresh_token: string;
+  refresh_token_expires_in: number;
+  token_type: string;
+  scope: string;
+}
+
 // https://www.fastify.io/docs/latest/Reference/TypeScript/#typebox
 server.post<{ Body: GithubCodeType }>("/github", async (request, reply) => {
   const { code } = request.body;
 
-  const url = new URL(process.env.GITHUB_OAUTH_POST);
-  url.searchParams.set("client_id", process.env.DEMO_KELLY_CLIENT_ID);
-  url.searchParams.set("client_secret", process.env.DEMO_KELLY_CLIENT_SECRET);
+  const url = new URL(process.env.GITHUB_OAUTH_SWAP_CODE_FOR_ACCESS_TOKEN);
+  url.searchParams.set("client_id", process.env.GITHUB_APP_CLIENT_ID);
+  url.searchParams.set("client_secret", process.env.GITHUB_APP_CLIENT_SECRET);
   url.searchParams.set("code", code);
 
-  try {
-    const response = await axios({
+  let err: Error | null;
+  let response: AxiosResponse<any> | undefined;
+
+  [err, response] = await to<AxiosResponse<SwapCodeForAccessToken>>(
+    axios({
       method: "post",
       url: url.toString(),
       headers: {
         accept: "application/json",
       },
-    });
+    })
+  );
 
-    if (response.status === 200) {
-      const { access_token: accessToken, token_type: tokenType } =
-        response.data;
-
-      try {
-        const res2 = await axios({
-          method: "get",
-          url: "https://api.github.com/user",
-          headers: {
-            Authorization: `token ${accessToken}`,
-          },
-        });
-
-        reply.status(200).send(res2.data);
-      } catch (err2) {
-        console.error(err2);
-
-        reply.status(500).send({});
-      }
-    }
-  } catch (err) {
-    console.error(err);
+  if (err) {
+    return reply.status(500).send({ isError: true, err });
   }
+
+  const { access_token } = response!.data;
+
+  [err, response] = await to(
+    axios({
+      method: "get",
+      url: "https://api.github.com/user",
+      headers: {
+        Authorization: `token ${access_token}`,
+      },
+    })
+  );
+
+  if (err) {
+    return reply.status(500).send({ isError: true, err });
+  }
+
+  return reply.status(200).send(response!.data);
 });
 
 start(server, port);
