@@ -1,17 +1,20 @@
 import "dotenv/config";
-import fastify, { FastifyBodyParser } from "fastify";
+import fastify from "fastify";
 import pino from "pino";
 import cors from "fastify-cors";
 import start from "./start";
 import { GithubCodeType } from "./schemas/GithubCode";
 import axios, { AxiosResponse } from "axios";
 import to from "await-to-js";
+import { GithubReposForUserType } from "./schemas/GithubReposForUser";
 
 const server = fastify({
   // logger: pino({ level: "info" }),
 });
 server.register(cors);
 const port = Number(process.env.PORT) || 8080;
+
+const mockDB = new Map();
 
 server.get("/ping", async () => {
   return "pong\n";
@@ -65,10 +68,49 @@ server.post<{ Body: GithubCodeType }>("/github", async (request, reply) => {
   );
 
   if (err) {
-    return reply.status(500).send({ isError: true, err });
+    return reply.status(500).send({ err });
   }
+
+  mockDB.set(response!.data.login, access_token);
 
   return reply.status(200).send(response!.data);
 });
+
+server.post<{ Body: GithubReposForUserType }>(
+  "/github/repos",
+  async (request, reply) => {
+    const { login } = request.body;
+
+    if (!login) {
+      return reply.status(400).send({ err: "missing login" });
+    }
+
+    const access_token = mockDB.get(login);
+
+    if (!access_token) {
+      return reply.status(404).send({ err: "todo" });
+    }
+
+    let err: Error | null;
+    let response: AxiosResponse<any> | undefined;
+
+    [err, response] = await to(
+      axios({
+        method: "get",
+        url: `https://api.github.com/users/${login}/repos`,
+        headers: {
+          Authorization: `token ${access_token}`,
+          accept: "application/vnd.github.v3+json",
+        },
+      })
+    );
+
+    if (err) {
+      return reply.status(500).send({ isError: true, err });
+    }
+
+    return reply.status(200).send(response!.data);
+  }
+);
 
 start(server, port);
