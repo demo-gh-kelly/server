@@ -5,14 +5,16 @@ import { axiosApiGithub } from "../helpers";
 
 export default function getUser(server: FastifyInstance, opts: any, done: any) {
   server.get("/user", async (request, reply) => {
-    const { access_token } = request.cookies;
+    let err: Error | null;
+    let access_token: any;
+    let response: AxiosResponse<any> | undefined;
 
-    if (!access_token) {
+    [err, access_token] = await to(request.jwtVerify());
+    if (err) {
       return reply.status(401).send({ err: "Not Authenticated" });
     }
 
-    let err: Error | null;
-    let response: AxiosResponse<any> | undefined;
+    console.log(access_token);
 
     [err, response] = await to(
       axiosApiGithub.get("/user", {

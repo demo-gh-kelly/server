@@ -1,7 +1,7 @@
 import to from "await-to-js";
 import axios, { AxiosResponse } from "axios";
 import { FastifyInstance } from "fastify";
-import { axiosApiGithub, buildUrl, JWTSign } from "../helpers";
+import { axiosApiGithub, buildUrl } from "../helpers";
 import { GithubCodeType } from "../schemas/GithubCode";
 
 interface Response {
@@ -70,16 +70,17 @@ export default function getAccessToken(
       return reply.status(500).send({ err });
     }
 
-    const encryptedAccessToken = JWTSign({ token: access_token });
+    const encryptedAccessToken = server.jwt.sign({ access_token });
     const payload = { user: response!.data };
 
     // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#attributes
     return reply
       .status(200)
       .setCookie("access_token", encryptedAccessToken, {
-        httpOnly: true,
-        maxAge: 1000 * 60 * 60 * 24,
+        domain: "*",
         path: "/",
+        secure: true,
+        httpOnly: true,
       })
       .send(payload);
   });

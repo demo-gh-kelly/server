@@ -3,6 +3,7 @@ import fastify from "fastify";
 import cors from "fastify-cors";
 import start from "./start";
 import fastifyCookie, { FastifyCookieOptions } from "fastify-cookie";
+import fastifyJWT, { FastifyJWTOptions } from "fastify-jwt";
 import getAccessToken from "./routes/getAccessToken";
 import getInstallations from "./routes/getInstallations";
 import getUser from "./routes/getUser";
@@ -13,13 +14,22 @@ const server = fastify({
 
 server.register(cors, {
   credentials: true,
-  origin: "https://127.0.0.1:9000",
+  origin: ["https://127.0.0.1:9000"],
 });
 
 const fastifyCookieOptions: FastifyCookieOptions = {
   secret: process.env.COOKIE_SECRET,
 };
 server.register(fastifyCookie, fastifyCookieOptions);
+
+const fastifyJWTOptions: FastifyJWTOptions = {
+  secret: process.env.JWT_SECRET,
+  cookie: {
+    cookieName: "access_token",
+    signed: false,
+  },
+};
+server.register(fastifyJWT, fastifyJWTOptions);
 
 server.get("/ping", async () => {
   return "pong\n";
@@ -29,41 +39,6 @@ server.register(getAccessToken);
 server.register(getUser);
 server.register(getInstallations);
 
-// server.post<{ Body: GithubReposForUserType }>(
-//   "/github/repos",
-//   async (request, reply) => {
-//     const { login } = request.body;
-
-//     if (!login) {
-//       return reply.status(400).send({ err: "missing login" });
-//     }
-
-//     const access_token = mockDB.get(login);
-
-//     if (!access_token) {
-//       return reply.status(404).send({ err: "todo" });
-//     }
-
-//     let err: Error | null;
-//     let response: AxiosResponse<any> | undefined;
-
-//     [err, response] = await to(
-//       axios({
-//         method: "get",
-//         url: `https://api.github.com/users/${login}/repos`,
-//         headers: {
-//           Authorization: `token ${access_token}`,
-//           accept: "application/vnd.github.v3+json",
-//         },
-//       })
-//     );
-
-//     if (err) {
-//       return reply.status(500).send({ isError: true, err });
-//     }
-
-//     return reply.status(200).send(response!.data);
-//   }
-// );
+// https://api.github.com/users/${login}/repos
 
 start(server);
