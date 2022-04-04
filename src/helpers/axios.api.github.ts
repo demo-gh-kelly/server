@@ -6,7 +6,3 @@ export default axios.create({
     accept: "application/vnd.github.v3+json",
   },
 });
-
-export function createAPIGithubAuthorization(access_token: string): string {
-  return `token ${access_token}`;
-}

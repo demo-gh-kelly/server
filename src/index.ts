@@ -4,12 +4,17 @@ import cors from "fastify-cors";
 import start from "./start";
 import fastifyCookie, { FastifyCookieOptions } from "fastify-cookie";
 import getAccessToken from "./routes/getAccessToken";
+import getInstallations from "./routes/getInstallations";
+import getUser from "./routes/getUser";
 
 const server = fastify({
   logger: false,
 });
 
-server.register(cors);
+server.register(cors, {
+  credentials: true,
+  origin: "https://127.0.0.1:9000",
+});
 
 const fastifyCookieOptions: FastifyCookieOptions = {
   secret: process.env.COOKIE_SECRET,
@@ -21,6 +26,8 @@ server.get("/ping", async () => {
 });
 
 server.register(getAccessToken);
+server.register(getUser);
+server.register(getInstallations);
 
 // server.post<{ Body: GithubReposForUserType }>(
 //   "/github/repos",

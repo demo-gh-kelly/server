@@ -2,7 +2,6 @@ import to from "await-to-js";
 import axios, { AxiosResponse } from "axios";
 import { FastifyInstance } from "fastify";
 import { axiosApiGithub, buildUrl, JWTSign } from "../helpers";
-import { createAPIGithubAuthorization } from "../helpers/axios.api.github";
 import { GithubCodeType } from "../schemas/GithubCode";
 
 interface Response {
@@ -21,6 +20,10 @@ export default function getAccessToken(
 ) {
   server.post<{ Body: GithubCodeType }>("/github", async (request, reply) => {
     const { code } = request.body;
+
+    if (!code) {
+      return reply.status(400).send({ err: "Missing code" });
+    }
 
     const {
       GITHUB_OAUTH_SWAP_CODE_FOR_ACCESS_TOKEN,
@@ -58,7 +61,7 @@ export default function getAccessToken(
     [err, response] = await to(
       axiosApiGithub.get("/user", {
         headers: {
-          Authorization: createAPIGithubAuthorization(access_token),
+          Authorization: `token ${access_token}`,
         },
       })
     );
@@ -75,8 +78,7 @@ export default function getAccessToken(
       .status(200)
       .setCookie("access_token", encryptedAccessToken, {
         httpOnly: true,
-        sameSite: true,
-        secure: true,
+        maxAge: 1000 * 60 * 60 * 24,
         path: "/",
       })
       .send(payload);
