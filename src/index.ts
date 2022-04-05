@@ -7,6 +7,7 @@ import getAccessToken from "./routes/getAccessToken";
 import start from "./start";
 import { githubAPIPlugin } from "./plugins/githubAPI";
 import { userRoutes, reposRoutes, installationsRoutes } from "./routes";
+import { awaitToJsPlugin } from "./plugins/await-to-js";
 
 const fastify = createFastifyInstance({
   logger: false,
@@ -31,7 +32,11 @@ const fastifyJWTOptions: FastifyJWTOptions = {
 };
 fastify.register(fastifyJWT, fastifyJWTOptions);
 
+/**
+ * CUSTOM PLUGINS
+ */
 fastify.register(githubAPIPlugin);
+fastify.register(awaitToJsPlugin);
 
 /**
  * ROUTES

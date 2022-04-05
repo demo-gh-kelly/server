@@ -1,11 +1,11 @@
 import axios from "axios";
 import { FastifyInstance, FastifyRequest } from "fastify";
-import fastifyPlugin from "fastify-plugin";
+import fp from "fastify-plugin";
 
 const baseURL = "https://api.github.com";
 const accept = "application/vnd.github.v3+json";
 
-async function githubAPIAxios(fastify: FastifyInstance) {
+async function githubAPIAxiosDecorator(fastify: FastifyInstance) {
   fastify.decorate("githubAPI", null);
   fastify.addHook("onRequest", async (request: FastifyRequest) => {
     request.githubAPI = axios.create({
@@ -17,4 +17,4 @@ async function githubAPIAxios(fastify: FastifyInstance) {
   });
 }
 
-export const githubAPIPlugin = fastifyPlugin(githubAPIAxios);
+export const githubAPIPlugin = fp(githubAPIAxiosDecorator);

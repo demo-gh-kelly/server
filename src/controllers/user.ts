@@ -1,11 +1,10 @@
-import to from "await-to-js";
 import { FastifyReply, FastifyRequest } from "fastify";
 
 export async function getUser(request: FastifyRequest, reply: FastifyReply) {
   let err: Error | null;
   let response: any;
 
-  [err, response] = await to(
+  [err, response] = await request.to(
     request.githubAPI.get("/user", {
       headers: {
         Authorization: `token ${request.access_token}`,
