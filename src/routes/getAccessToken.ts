@@ -1,6 +1,6 @@
 import to from "await-to-js";
 import axios, { AxiosResponse } from "axios";
-import { FastifyInstance } from "fastify";
+import { FastifyInstance, HookHandlerDoneFunction } from "fastify";
 import { axiosApiGithub, buildUrl } from "../helpers";
 import { GithubCodeType } from "../schemas/GithubCode";
 
@@ -14,11 +14,11 @@ interface Response {
 }
 
 export default function getAccessToken(
-  server: FastifyInstance,
+  fastify: FastifyInstance,
   opts: any, // find type
-  done: any // find type
+  done: HookHandlerDoneFunction
 ) {
-  server.post<{ Body: GithubCodeType }>("/github", async (request, reply) => {
+  fastify.post<{ Body: GithubCodeType }>("/github", async (request, reply) => {
     const { code } = request.body;
 
     if (!code) {
@@ -70,7 +70,7 @@ export default function getAccessToken(
       return reply.status(500).send({ err });
     }
 
-    const encryptedAccessToken = server.jwt.sign({ access_token, expires_in });
+    const encryptedAccessToken = fastify.jwt.sign({ access_token, expires_in });
     const payload = { user: response!.data };
 
     // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#attributes

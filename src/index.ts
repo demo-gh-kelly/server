@@ -1,18 +1,18 @@
 import "dotenv/config";
-import fastify from "fastify";
+import createFastifyInstance from "fastify";
 import cors from "fastify-cors";
-import start from "./start";
 import fastifyCookie, { FastifyCookieOptions } from "fastify-cookie";
 import fastifyJWT, { FastifyJWTOptions } from "fastify-jwt";
 import getAccessToken from "./routes/getAccessToken";
 import getInstallations from "./routes/getInstallations";
 import getUser from "./routes/getUser";
+import start from "./start";
 
-const server = fastify({
+const fastify = createFastifyInstance({
   logger: false,
 });
 
-server.register(cors, {
+fastify.register(cors, {
   credentials: true,
   origin: ["https://dev.localhost.com:9000"],
 });
@@ -20,7 +20,7 @@ server.register(cors, {
 const fastifyCookieOptions: FastifyCookieOptions = {
   secret: process.env.COOKIE_SECRET,
 };
-server.register(fastifyCookie, fastifyCookieOptions);
+fastify.register(fastifyCookie, fastifyCookieOptions);
 
 const fastifyJWTOptions: FastifyJWTOptions = {
   secret: process.env.JWT_SECRET,
@@ -29,16 +29,12 @@ const fastifyJWTOptions: FastifyJWTOptions = {
     signed: false,
   },
 };
-server.register(fastifyJWT, fastifyJWTOptions);
+fastify.register(fastifyJWT, fastifyJWTOptions);
 
-server.get("/ping", async () => {
-  return "pong\n";
-});
+fastify.register(getAccessToken);
+fastify.register(getUser);
+fastify.register(getInstallations);
 
-server.register(getAccessToken);
-server.register(getUser);
-server.register(getInstallations);
+start(fastify);
 
 // https://api.github.com/users/${login}/repos
-
-start(server);

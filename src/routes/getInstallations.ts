@@ -1,12 +1,12 @@
 import to from "await-to-js";
-import { FastifyInstance } from "fastify";
+import { FastifyInstance, HookHandlerDoneFunction } from "fastify";
 import { axiosApiGithub } from "../helpers";
 import authMiddleware from "../middlewares/auth";
 
 export default function getInstallations(
   server: FastifyInstance,
   opts: any,
-  done: any
+  done: HookHandlerDoneFunction
 ) {
   server.get(
     "/installations",

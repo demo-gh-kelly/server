@@ -1,11 +1,14 @@
 import to from "await-to-js";
-import { AxiosResponse } from "axios";
-import { FastifyInstance } from "fastify";
+import { FastifyInstance, HookHandlerDoneFunction } from "fastify";
 import { axiosApiGithub } from "../helpers";
 import authMiddleware from "../middlewares/auth";
 
-export default function getUser(server: FastifyInstance, opts: any, done: any) {
-  server.get(
+export default function getUser(
+  fastify: FastifyInstance,
+  opts: any,
+  done: HookHandlerDoneFunction
+) {
+  fastify.get(
     "/user",
     { preHandler: [authMiddleware] },
     async (request, reply) => {
