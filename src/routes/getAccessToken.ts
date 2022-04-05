@@ -1,7 +1,7 @@
 import to from "await-to-js";
 import axios, { AxiosResponse } from "axios";
 import { FastifyInstance, HookHandlerDoneFunction } from "fastify";
-import { axiosApiGithub, buildUrl } from "../helpers";
+import { buildUrl } from "../helpers";
 import { GithubCodeType } from "../schemas/GithubCode";
 
 interface Response {
@@ -59,7 +59,7 @@ export default function getAccessToken(
     const { access_token, expires_in } = response!.data;
 
     [err, response] = await to(
-      axiosApiGithub.get("/user", {
+      request.githubAPI.get("/user", {
         headers: {
           Authorization: `token ${access_token}`,
         },

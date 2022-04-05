@@ -4,10 +4,9 @@ import cors from "fastify-cors";
 import fastifyCookie, { FastifyCookieOptions } from "fastify-cookie";
 import fastifyJWT, { FastifyJWTOptions } from "fastify-jwt";
 import getAccessToken from "./routes/getAccessToken";
-import getInstallations from "./routes/getInstallations";
-import getUser from "./routes/getUser";
 import start from "./start";
 import { githubAPIPlugin } from "./plugins/githubAPI";
+import { userRoutes, reposRoutes, installationsRoutes } from "./routes";
 
 const fastify = createFastifyInstance({
   logger: false,
@@ -32,11 +31,14 @@ const fastifyJWTOptions: FastifyJWTOptions = {
 };
 fastify.register(fastifyJWT, fastifyJWTOptions);
 
-fastify.register(getAccessToken);
-fastify.register(getUser);
-fastify.register(getInstallations);
 fastify.register(githubAPIPlugin);
 
-start(fastify);
+/**
+ * ROUTES
+ */
+fastify.register(getAccessToken);
+fastify.register(userRoutes);
+fastify.register(reposRoutes);
+fastify.register(installationsRoutes);
 
-// https://api.github.com/users/${login}/repos
+start(fastify);
