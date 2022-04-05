@@ -1,6 +1,5 @@
 import to from "await-to-js";
 import { FastifyInstance, HookHandlerDoneFunction } from "fastify";
-import { axiosApiGithub } from "../helpers";
 import authMiddleware from "../middlewares/auth";
 
 export default function getUser(
@@ -16,12 +15,16 @@ export default function getUser(
       let response: any;
 
       [err, response] = await to(
-        axiosApiGithub.get("/user", {
+        request.githubAPI.get("/user", {
           headers: {
             Authorization: `token ${request.access_token}`,
           },
         })
       );
+
+      if (err != null) {
+        return reply.status(500).send({ msg: "ops" });
+      }
 
       const payload = { user: response!.data };
 

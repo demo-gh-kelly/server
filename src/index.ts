@@ -7,6 +7,7 @@ import getAccessToken from "./routes/getAccessToken";
 import getInstallations from "./routes/getInstallations";
 import getUser from "./routes/getUser";
 import start from "./start";
+import { githubAPIPlugin } from "./plugins/githubAPI";
 
 const fastify = createFastifyInstance({
   logger: false,
@@ -34,6 +35,7 @@ fastify.register(fastifyJWT, fastifyJWTOptions);
 fastify.register(getAccessToken);
 fastify.register(getUser);
 fastify.register(getInstallations);
+fastify.register(githubAPIPlugin);
 
 start(fastify);
 
