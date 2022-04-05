@@ -14,8 +14,6 @@ export default function getUser(server: FastifyInstance, opts: any, done: any) {
       return reply.status(401).send({ err: "Not Authenticated" });
     }
 
-    console.log(access_token);
-
     [err, response] = await to(
       axiosApiGithub.get("/user", {
         headers: {

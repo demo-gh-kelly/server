@@ -14,7 +14,7 @@ const server = fastify({
 
 server.register(cors, {
   credentials: true,
-  origin: ["https://127.0.0.1:9000"],
+  origin: ["https://dev.localhost.com:9000"],
 });
 
 const fastifyCookieOptions: FastifyCookieOptions = {

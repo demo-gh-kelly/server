@@ -56,7 +56,7 @@ export default function getAccessToken(
       return reply.status(500).send({ err });
     }
 
-    const { access_token } = response!.data;
+    const { access_token, expires_in } = response!.data;
 
     [err, response] = await to(
       axiosApiGithub.get("/user", {
@@ -70,17 +70,18 @@ export default function getAccessToken(
       return reply.status(500).send({ err });
     }
 
-    const encryptedAccessToken = server.jwt.sign({ access_token });
+    const encryptedAccessToken = server.jwt.sign({ access_token, expires_in });
     const payload = { user: response!.data };
 
     // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#attributes
     return reply
       .status(200)
       .setCookie("access_token", encryptedAccessToken, {
-        domain: "*",
         path: "/",
+        sameSite: "none",
         secure: true,
         httpOnly: true,
+        expires: new Date(new Date().setDate(new Date().getDate() + 1)),
       })
       .send(payload);
   });
