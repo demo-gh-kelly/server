@@ -1,18 +1,36 @@
+import to from "await-to-js";
 import { FastifyInstance } from "fastify";
+import { axiosApiGithub } from "../helpers";
+import authMiddleware from "../middlewares/auth";
 
 export default function getInstallations(
   server: FastifyInstance,
   opts: any,
   done: any
 ) {
-  server.get("/installations", async (request, reply) => {
-    const { access_token } = request.cookies;
+  server.get(
+    "/installations",
+    { preHandler: [authMiddleware] },
+    async (request, reply) => {
+      let err: Error | null;
+      let response: any;
 
-    if (!access_token) {
-      return reply.status(401).send({ err: "Not Authenticated" });
+      [err, response] = await to(
+        axiosApiGithub.get("/user/installations", {
+          headers: {
+            Authorization: `token ${request.access_token}`,
+          },
+        })
+      );
+
+      if (err != null) {
+        return reply.status(500).send({ err: "Ops" });
+      }
+
+      const payload = { user: response!.data };
+
+      return reply.status(200).send(payload);
     }
-
-    return reply.status(200).send({ msg: "Ok" });
-  });
+  );
   done();
 }
